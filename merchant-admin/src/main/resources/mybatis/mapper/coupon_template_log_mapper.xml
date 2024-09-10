@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.uestc.onecoupon.merchant.admin.dao.mapper.CouponTemplateLogMapper">
+
+    <resultMap id="dataMap" type="com.uestc.onecoupon.merchant.admin.dao.entity.CouponTemplateLogDO">
+        <id column="id" property="id"/>
+        <result column="shop_number" property="shopNumber"/>
+        <result column="coupon_template_id" property="couponTemplateId"/>
+        <result column="operator_id" property="operatorId"/>
+        <result column="operation_log" property="operationLog"/>
+        <result column="original_data" property="originalData"/>
+        <result column="modified_data" property="modifiedData"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+
+    <insert id="insert" parameterType="com.uestc.onecoupon.merchant.admin.dao.entity.CouponTemplateLogDO">
+        INSERT INTO coupon_template_log (shop_number, coupon_template_id, operator_id, operation_log, original_data, modified_data, create_time)
+        VALUES (#{shopNumber}, #{couponTemplateId}, #{operatorId}, #{operationLog}, #{originalData}, #{modifiedData}, #{createTime})
+    </insert>
+
+
+</mapper>

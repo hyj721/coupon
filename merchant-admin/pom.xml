@@ -44,6 +44,11 @@
             <artifactId>transmittable-thread-local</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>io.github.mouzt</groupId>
+            <artifactId>bizlog-sdk</artifactId>
+        </dependency>
+
         <!-- 数据库持久层相关依赖 -->
         <dependency>
             <groupId>mysql</groupId>

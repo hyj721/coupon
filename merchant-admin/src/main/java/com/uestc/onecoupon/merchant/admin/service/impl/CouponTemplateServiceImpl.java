@@ -1,6 +1,8 @@
 package com.uestc.onecoupon.merchant.admin.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import com.mzt.logapi.context.LogRecordContext;
+import com.mzt.logapi.starter.annotation.LogRecord;
 import com.uestc.onecoupon.merchant.admin.common.constant.MerchantAdminRedisConstant;
 import com.uestc.onecoupon.merchant.admin.common.context.UserContext;
 import com.uestc.onecoupon.merchant.admin.common.enums.CouponTemplateStatusEnum;
@@ -15,7 +17,10 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.uestc.onecoupon.merchant.admin.common.enums.ChainBizMarkEnum.MERCHANT_ADMIN_CREATE_COUPON_TEMPLATE_KEY;
@@ -31,6 +36,22 @@ public class CouponTemplateServiceImpl implements ICouponTemplateService {
 
     private final StringRedisTemplate stringRedisTemplate;
 
+    @LogRecord(
+            success = """
+                创建优惠券：{{#requestParam.name}}， \
+                优惠对象：{COMMON_ENUM_PARSE{'DiscountTargetEnum' + '_' + #requestParam.target}}， \
+                优惠类型：{COMMON_ENUM_PARSE{'DiscountTypeEnum' + '_' + #requestParam.type}}， \
+                库存数量：{{#requestParam.stock}}， \
+                优惠商品编码：{{#requestParam.goods}}， \
+                有效期开始时间：{{#requestParam.validStartTime}}， \
+                有效期结束时间：{{#requestParam.validEndTime}}， \
+                领取规则：{{#requestParam.receiveRule}}， \
+                消耗规则：{{#requestParam.consumeRule}};
+                """,
+            type = "CouponTemplate", // 指定该日志的业务类型是 CouponTemplate，表示这条日志的记录类型。
+            bizNo = "{{#bizNo}}",
+            extra = "{{#requestParam.toString()}}"
+    )
     @Override
     public void createCouponTemplate(CouponTemplateSaveReqDTO requestParam) {
         // 通过责任链验证请求参数是否正确，如果没通过会抛出异常
@@ -41,6 +62,8 @@ public class CouponTemplateServiceImpl implements ICouponTemplateService {
         couponTemplateDO.setStatus(CouponTemplateStatusEnum.ACTIVE.getStatus());
         couponTemplateDO.setShopNumber(UserContext.getShopNumber());
         couponTemplateMapper.insert(couponTemplateDO);
+        LogRecordContext.putVariable("bizNo", couponTemplateDO.getId());
+        // 在此处暂时不put originalData，第一次创建就只记录modified_data，而不用冗余记录original_data，只有优惠券变化的时候才记录
 
         // 缓存预热：通过将数据库的记录序列化成 JSON 字符串放入 Redis 缓存
         CouponTemplateQueryRespDTO actualRespDTO = BeanUtil.toBean(couponTemplateDO, CouponTemplateQueryRespDTO.class);
