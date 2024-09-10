@@ -22,35 +22,8 @@
     </resultMap>
 
     <insert id="insert" parameterType="com.uestc.onecoupon.merchant.admin.dao.entity.CouponTemplateDO" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO coupon_template (
-            shop_number,
-            name,
-            source,
-            target,
-            goods,
-            type,
-            valid_start_time,
-            valid_end_time,
-            stock,
-            receive_rule,
-            consume_rule,
-            status
-        ) VALUES (
-                     #{shopNumber},
-                     #{name},
-                     #{source},
-                     #{target},
-                     #{goods},
-                     #{type},
-                     #{validStartTime},
-                     #{validEndTime},
-                     #{stock},
-                     #{receiveRule},
-                     #{consumeRule},
-                     #{status}
-                 )
+        INSERT INTO coupon_template (shop_number, name, source, target, goods, type, valid_start_time, valid_end_time, stock, receive_rule, consume_rule, status)
+        VALUES (#{shopNumber}, #{name}, #{source}, #{target}, #{goods}, #{type}, #{validStartTime}, #{validEndTime}, #{stock}, #{receiveRule}, #{consumeRule}, #{status})
     </insert>
-
-
 
 </mapper>

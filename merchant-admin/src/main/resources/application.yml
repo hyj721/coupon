@@ -5,9 +5,8 @@ spring:
   application:
     name: oneCoupon-merchant-admin
   datasource:
-    url: jdbc:mysql://127.0.0.1:3306/one_coupon?useUnicode=true&characterEncoding=UTF-8&rewriteBatchedStatements=true&allowMultiQueries=true&serverTimezone=Asia/Shanghai
-    username: root
-    password: abc123
+    driver-class-name: org.apache.shardingsphere.driver.ShardingSphereDriver
+    url: jdbc:shardingsphere:classpath:shardingsphere-config.yaml
   data:
     redis:
       host: 127.0.0.1
