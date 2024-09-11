@@ -15,8 +15,8 @@
 
 
     <insert id="insert" parameterType="com.uestc.onecoupon.merchant.admin.dao.entity.CouponTemplateLogDO">
-        INSERT INTO coupon_template_log (shop_number, coupon_template_id, operator_id, operation_log, original_data, modified_data, create_time)
-        VALUES (#{shopNumber}, #{couponTemplateId}, #{operatorId}, #{operationLog}, #{originalData}, #{modifiedData}, #{createTime})
+        INSERT INTO coupon_template_log (shop_number, coupon_template_id, operator_id, operation_log, original_data, modified_data)
+        VALUES (#{shopNumber}, #{couponTemplateId}, #{operatorId}, #{operationLog}, #{originalData}, #{modifiedData})
     </insert>
 
 

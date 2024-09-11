@@ -1,1 +1,2 @@
 com.uestc.coupon.framework.config.WebAutoConfiguration
+com.uestc.coupon.framework.config.NoDuplicateSubmitConfiguration
