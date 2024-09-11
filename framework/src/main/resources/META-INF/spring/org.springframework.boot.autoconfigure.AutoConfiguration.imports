@@ -1,2 +1,3 @@
 com.uestc.coupon.framework.config.WebAutoConfiguration
 com.uestc.coupon.framework.config.NoDuplicateSubmitConfiguration
+com.uestc.coupon.framework.config.ThreadPoolConfig

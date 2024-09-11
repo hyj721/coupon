@@ -13,12 +13,14 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ThreadPoolExecutor;
 
 @RequiredArgsConstructor
 @Service
 @Slf4j
 public class DBLogRecordServiceImpl implements ILogRecordService {
     private final CouponTemplateLogMapper couponTemplateLogMapper;
+    private final ThreadPoolExecutor threadPoolExecutor;
 
     @Override
     public void record(LogRecord logRecord) {
@@ -34,11 +36,14 @@ public class DBLogRecordServiceImpl implements ILogRecordService {
                         .build();
                 couponTemplateLogMapper.insert(couponTemplateLogDO);
             } else {
+                // 其他类型操作
 
             }
         } catch (Exception ex) {
             log.error("记录[{}]操作日志失败", logRecord.getType(), ex);
         }
+
+
     }
 
     @Override

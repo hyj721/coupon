@@ -25,5 +25,55 @@
         INSERT INTO coupon_template (shop_number, name, source, target, goods, type, valid_start_time, valid_end_time, stock, receive_rule, consume_rule, status)
         VALUES (#{shopNumber}, #{name}, #{source}, #{target}, #{goods}, #{type}, #{validStartTime}, #{validEndTime}, #{stock}, #{receiveRule}, #{consumeRule}, #{status})
     </insert>
+    <select id="queryPage" resultMap="dataMap">
+        SELECT name, source, target, goods, type, valid_start_time, valid_end_time, stock, receive_rule, consume_rule
+        from coupon_template
+        <where>
+            <!-- 必须的条件：shopNumber -->
+            shop_number = #{shopNumber}
+
+            <!-- 动态添加条件：name -->
+            <if test="name != null and name != ''">
+                AND name LIKE CONCAT('%', #{name}, '%')
+            </if>
+
+            <!-- 动态添加条件：target -->
+            <if test="target != null">
+                AND target = #{target}
+            </if>
+
+            <!-- 动态添加条件：goods -->
+            <if test="goods != null and goods != ''">
+                AND goods LIKE CONCAT('%', #{goods}, '%')
+            </if>
+
+            <!-- 动态添加条件：type -->
+            <if test="type != null">
+                AND type = #{type}
+            </if>
+
+
+        </where>
+    </select>
+
+    <select id="query" resultMap="dataMap">
+        SELECT id, name, shop_number, source, target, goods, type, valid_start_time, valid_end_time, stock, receive_rule, consume_rule, status
+        from coupon_template
+        where shop_number = #{shopNumber} AND id = #{id}
+
+    </select>
+
+    <update id="increaseNumberCouponTemplate">
+        UPDATE coupon_template
+        SET stock = stock + #{number}
+        WHERE shop_number = #{couponTemplateDOReq.shopNumber}
+          AND id = #{couponTemplateDOReq.id}
+    </update>
+    <update id="updateCouponTemplateEnd">
+        UPDATE coupon_template
+        SET status = 1
+        WHERE shop_number = #{shopNumber}
+          AND id = #{id}
+    </update>
 
 </mapper>
