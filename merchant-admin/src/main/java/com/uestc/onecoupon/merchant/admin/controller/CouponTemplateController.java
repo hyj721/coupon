@@ -11,47 +11,44 @@ import com.uestc.onecoupon.merchant.admin.dto.resp.CouponTemplatePageQueryRespDT
 import com.uestc.onecoupon.merchant.admin.dto.resp.CouponTemplateQueryRespDTO;
 import com.uestc.onecoupon.merchant.admin.service.ICouponTemplateService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api/")
 public class CouponTemplateController {
 
     private final ICouponTemplateService couponTemplateService;
 
 
     @NoDuplicateSubmit(message = "您操作太快，请稍后再试")
-    @PostMapping("/api/merchant-admin/coupon-template/create")
+    @PostMapping("/merchant-admin/coupon-template/create")
     public Result<Void> createCouponTemplate(@RequestBody CouponTemplateSaveReqDTO requestParam) {
         couponTemplateService.createCouponTemplate(requestParam);
         return Results.success();
     }
 
-    @GetMapping("/api/merchant-admin/coupon-template/page")
+    @GetMapping("/merchant-admin/coupon-template/page")
     public Result<PageInfo<CouponTemplatePageQueryRespDTO>> pageQueryCouponTemplate(CouponTemplatePageQueryReqDTO requestParam) {
         return Results.success(couponTemplateService.pageQueryCouponTemplate(requestParam));
     }
 
-    @GetMapping("/api/merchant-admin/coupon-template/find")
+    @GetMapping("/merchant-admin/coupon-template/find")
     public Result<CouponTemplateQueryRespDTO> findCouponTemplate(String couponTemplateId) {
         return Results.success(couponTemplateService.findCouponTemplateById(couponTemplateId));
     }
 
     @NoDuplicateSubmit(message = "请勿短时间内重复增加优惠券发行量")
-    @PostMapping("/api/merchant-admin/coupon-template/increase-number")
+    @PostMapping("/merchant-admin/coupon-template/increase-number")
     public Result<Void> increaseNumberCouponTemplate(@RequestBody CouponTemplateNumberReqDTO requestParam) {
         couponTemplateService.increaseNumberCouponTemplate(requestParam);
         return Results.success();
     }
 
-    @PostMapping("/api/merchant-admin/coupon-template/terminate")
+    @PostMapping("/merchant-admin/coupon-template/terminate")
     public Result<Void> terminateCouponTemplate(String couponTemplateId) {
         couponTemplateService.terminateCouponTemplate(couponTemplateId);
         return Results.success();
     }
-
 
 }
