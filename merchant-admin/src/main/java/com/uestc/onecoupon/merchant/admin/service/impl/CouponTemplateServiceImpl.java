@@ -22,19 +22,25 @@ import com.uestc.onecoupon.merchant.admin.dto.resp.CouponTemplateQueryRespDTO;
 import com.uestc.onecoupon.merchant.admin.service.ICouponTemplateService;
 import com.uestc.onecoupon.merchant.admin.service.basics.chain.MerchantAdminChainContext;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.rocketmq.client.producer.SendResult;
+import org.apache.rocketmq.common.message.MessageConst;
+import org.apache.rocketmq.spring.core.RocketMQTemplate;
+import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
+import com.alibaba.fastjson2.JSONObject;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.uestc.onecoupon.merchant.admin.common.enums.ChainBizMarkEnum.MERCHANT_ADMIN_CREATE_COUPON_TEMPLATE_KEY;
 
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CouponTemplateServiceImpl implements ICouponTemplateService {
@@ -45,18 +51,23 @@ public class CouponTemplateServiceImpl implements ICouponTemplateService {
 
     private final StringRedisTemplate stringRedisTemplate;
 
+    private final RocketMQTemplate rocketMQTemplate;
+
+    private final ConfigurableEnvironment configurableEnvironment;
+
+
     @LogRecord(
             success = """
-                创建优惠券：{{#requestParam.name}}， \
-                优惠对象：{COMMON_ENUM_PARSE{'DiscountTargetEnum' + '_' + #requestParam.target}}， \
-                优惠类型：{COMMON_ENUM_PARSE{'DiscountTypeEnum' + '_' + #requestParam.type}}， \
-                库存数量：{{#requestParam.stock}}， \
-                优惠商品编码：{{#requestParam.goods}}， \
-                有效期开始时间：{{#requestParam.validStartTime}}， \
-                有效期结束时间：{{#requestParam.validEndTime}}， \
-                领取规则：{{#requestParam.receiveRule}}， \
-                消耗规则：{{#requestParam.consumeRule}};
-                """,
+                    创建优惠券：{{#requestParam.name}}， \
+                    优惠对象：{COMMON_ENUM_PARSE{'DiscountTargetEnum' + '_' + #requestParam.target}}， \
+                    优惠类型：{COMMON_ENUM_PARSE{'DiscountTypeEnum' + '_' + #requestParam.type}}， \
+                    库存数量：{{#requestParam.stock}}， \
+                    优惠商品编码：{{#requestParam.goods}}， \
+                    有效期开始时间：{{#requestParam.validStartTime}}， \
+                    有效期结束时间：{{#requestParam.validEndTime}}， \
+                    领取规则：{{#requestParam.receiveRule}}， \
+                    消耗规则：{{#requestParam.consumeRule}};
+                    """,
             type = "CouponTemplate", // 指定该日志的业务类型是 CouponTemplate，表示这条日志的记录类型。
             bizNo = "{{#bizNo}}",
             extra = "{{#requestParam.toString()}}"
@@ -107,6 +118,37 @@ public class CouponTemplateServiceImpl implements ICouponTemplateService {
                 keys,
                 args.toArray()
         );
+
+        String couponTemplateDelayCloseTopic = "one-coupon_merchant-admin-service_coupon-template-delay_topic${unique-name:}";
+        // 通过 Spring 上下文解析占位符，也就是把 VM 参数里的 unique-name 替换到字符串中
+        couponTemplateDelayCloseTopic = configurableEnvironment.resolvePlaceholders(couponTemplateDelayCloseTopic);
+
+        // 定义消息体
+        JSONObject messageBody = new JSONObject();
+        messageBody.put("couponTemplateId", couponTemplateDO.getId());
+        messageBody.put("shopNumber", UserContext.getShopNumber());
+
+        // 设置消息的送达时间，毫秒级 Unix 时间戳
+        Long deliverTimeStamp = couponTemplateDO.getValidEndTime().getTime();
+
+        // 构建消息体
+        String messageKeys = UUID.randomUUID().toString();
+        Message<JSONObject> message = MessageBuilder
+                .withPayload(messageBody)
+                .setHeader(MessageConst.PROPERTY_KEYS, messageKeys)
+                .build();
+
+        // 执行 RocketMQ5.x 消息队列发送&异常处理逻辑
+        // 消息ID是由 RocketMQ 在消息发送时自动生成的，通常是由 RocketMQ 的 Broker 系统生成的一个唯一标识符，用来标识每条消息。
+        // 消息Keys是由应用程序在发送消息时手动设置的，可以是具有业务意义的唯一标识符。例如，在电商系统中，订单ID可以作为消息的Keys。
+        SendResult sendResult;
+        try {
+            sendResult = rocketMQTemplate.syncSendDeliverTimeMills(couponTemplateDelayCloseTopic, message, deliverTimeStamp);
+            log.info("[生产者] 优惠券模板延时关闭 - 发送结果：{}，消息ID：{}，消息Keys：{}", sendResult.getSendStatus(), sendResult.getMsgId(), messageKeys);
+        } catch (Exception ex) {
+            log.error("[生产者] 优惠券模板延时关闭 - 消息发送失败，消息体：{}", couponTemplateDO.getId(), ex);
+        }
+
     }
 
     @Override

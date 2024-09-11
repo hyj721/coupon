@@ -17,6 +17,14 @@ mybatis:
   mapper-locations: classpath:/mybatis/mapper/*.xml
   config-location: classpath:/mybatis/config/mybatis-config.xml
 
+rocketmq:
+  name-server: 127.0.0.1:9876 # # NameServer 地址，如果 VM 参数里设置了云服务器 RocketMQ 地址，运行时会替换
+  producer:
+    # 通用生产者组，其中的 ${unique-name:} 是为了避免大家公用一个 Topic，造成你发的消息被其他人消费，其他人发的消息被你消费等问题
+    group: oneCoupon_merchant-admin${unique-name:}-service_common-message-execute_pg
+    send-message-timeout: 2000
+    retry-times-when-send-failed: 1
+    retry-times-when-send-async-failed: 1
 
 #logging:
 #  level:
