@@ -25,5 +25,44 @@
         INSERT INTO coupon_task (shop_number, batch_id, task_name, file_address, fail_file_address, send_num, notify_type, coupon_template_id, send_type, send_time, status, completion_time, operator_id)
         VALUES (#{shopNumber}, #{batchId}, #{taskName}, #{fileAddress}, #{failFileAddress}, #{sendNum}, #{notifyType}, #{couponTemplateId}, #{sendType}, #{sendTime}, #{status}, #{completionTime}, #{operatorId})
     </insert>
+    <update id="updateById" parameterType="com.uestc.onecoupon.merchant.admin.dao.entity.CouponTaskDO">
+        UPDATE coupon_task
+        <set>
+            <!-- 只更新传入的字段，非空时才更新 -->
+            <if test="shopNumber != null">
+                shop_number = #{shopNumber},
+            </if>
+            <if test="batchId != null">
+                batch_id = #{batchId},
+            </if>
+            <if test="taskName != null">
+                task_name = #{taskName},
+            </if>
+            <if test="fileAddress != null">
+                file_address = #{fileAddress},
+            </if>
+            <if test="failFileAddress != null">
+                fail_file_address = #{failFileAddress},
+            </if>
+            <if test="sendNum != null">
+                send_num = #{sendNum},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="operatorId != null">
+                operator_id = #{operatorId},
+            </if>
+            <if test="delFlag != null">
+                del_flag = #{delFlag},
+            </if>
+        </set>
+        WHERE id = #{id}
+    </update>
+    <select id="selectById" resultMap="dataMap" parameterType="java.lang.Long">
+        SELECT id, shop_number, batch_id, task_name, file_address, fail_file_address, send_num, notify_type, coupon_template_id, send_type, send_time, status, completion_time, operator_id
+        FROM coupon_task WHERE id = #{id}
+        </select>
+
 
 </mapper>

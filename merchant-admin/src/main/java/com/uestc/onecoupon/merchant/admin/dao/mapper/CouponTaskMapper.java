@@ -6,4 +6,8 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface CouponTaskMapper {
     void insert(CouponTaskDO couponTaskDO);
+
+    void updateById(CouponTaskDO updateCouponTaskDO);
+
+    CouponTaskDO selectById(Long id);
 }

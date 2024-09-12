@@ -20,7 +20,11 @@ public class CouponTaskController {
     @PostMapping("/merchant-admin/coupon-task/create")
     @NoDuplicateSubmit(message = "请勿短时间内重复提交优惠券推送任务")
     public Result<Void> createCouponTask(@RequestBody CouponTaskCreateReqDTO requestParam) {
+        long startTime = System.nanoTime();
         couponTaskService.createCouponTask(requestParam);
+        long totalTime = System.nanoTime();
+        System.out.printf("总时间: %.2f ms%n", (totalTime - startTime) / 1e6);
         return Results.success();
+
     }
 }
