@@ -85,6 +85,7 @@ public class CouponTaskServiceImpl implements ICouponTaskService {
         RBlockingDeque<Object> blockingDeque = redissonClient.getBlockingDeque("COUPON_TASK_SEND_NUM_DELAY_QUEUE");
         RDelayedQueue<Object> delayedQueue = redissonClient.getDelayedQueue(blockingDeque);
         // 这里延迟时间设置 20 秒，原因是我们笃定上面线程池 20 秒之内就能结束任务
+        delayedQueue.offer(delayJsonObject, 20, TimeUnit.SECONDS);
 
     }
 
