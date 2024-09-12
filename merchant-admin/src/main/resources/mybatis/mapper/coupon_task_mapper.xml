@@ -21,7 +21,7 @@
         <result column="update_time" property="updateTime"/>
         <result column="del_flag" property="delFlag"/>
     </resultMap>
-    <insert id="insert" parameterType="com.uestc.onecoupon.merchant.admin.dao.entity.CouponTaskDO">
+    <insert id="insert" parameterType="com.uestc.onecoupon.merchant.admin.dao.entity.CouponTaskDO" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO coupon_task (shop_number, batch_id, task_name, file_address, fail_file_address, send_num, notify_type, coupon_template_id, send_type, send_time, status, completion_time, operator_id)
         VALUES (#{shopNumber}, #{batchId}, #{taskName}, #{fileAddress}, #{failFileAddress}, #{sendNum}, #{notifyType}, #{couponTemplateId}, #{sendType}, #{sendTime}, #{status}, #{completionTime}, #{operatorId})
     </insert>
