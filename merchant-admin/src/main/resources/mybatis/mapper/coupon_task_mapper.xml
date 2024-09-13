@@ -63,6 +63,13 @@
         SELECT id, shop_number, batch_id, task_name, file_address, fail_file_address, send_num, notify_type, coupon_template_id, send_type, send_time, status, completion_time, operator_id
         FROM coupon_task WHERE id = #{id}
         </select>
+    <select id="selectPendingTasks" resultMap="dataMap">
+    <![CDATA[
+        SELECT id, shop_number, batch_id, task_name, file_address, fail_file_address, send_num, notify_type, coupon_template_id, send_type, send_time, status, completion_time, operator_id
+        FROM coupon_task WHERE status = 0 AND del_flag = 0 AND send_time <= NOW()
+        LIMIT #{initId}, #{maxLimit}
+        ]]>
+</select>
 
 
 </mapper>
