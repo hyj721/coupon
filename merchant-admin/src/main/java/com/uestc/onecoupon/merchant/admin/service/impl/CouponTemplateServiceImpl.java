@@ -3,6 +3,7 @@ package com.uestc.onecoupon.merchant.admin.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.mzt.logapi.context.LogRecordContext;
@@ -19,21 +20,19 @@ import com.uestc.onecoupon.merchant.admin.dto.req.CouponTemplatePageQueryReqDTO;
 import com.uestc.onecoupon.merchant.admin.dto.req.CouponTemplateSaveReqDTO;
 import com.uestc.onecoupon.merchant.admin.dto.resp.CouponTemplatePageQueryRespDTO;
 import com.uestc.onecoupon.merchant.admin.dto.resp.CouponTemplateQueryRespDTO;
+import com.uestc.onecoupon.merchant.admin.mq.event.CouponTemplateDelayEvent;
+import com.uestc.onecoupon.merchant.admin.mq.producer.CouponTemplateDelayExecuteStatusProducer;
 import com.uestc.onecoupon.merchant.admin.service.ICouponTemplateService;
 import com.uestc.onecoupon.merchant.admin.service.basics.chain.MerchantAdminChainContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.common.message.MessageConst;
-import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
-import com.alibaba.fastjson2.JSONObject;
-
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -51,9 +50,10 @@ public class CouponTemplateServiceImpl implements ICouponTemplateService {
 
     private final StringRedisTemplate stringRedisTemplate;
 
-    private final RocketMQTemplate rocketMQTemplate;
-
     private final ConfigurableEnvironment configurableEnvironment;
+
+    private final CouponTemplateDelayExecuteStatusProducer couponTemplateDelayExecuteStatusProducer;
+
 
 
     @LogRecord(
@@ -141,13 +141,14 @@ public class CouponTemplateServiceImpl implements ICouponTemplateService {
         // 执行 RocketMQ5.x 消息队列发送&异常处理逻辑
         // 消息ID是由 RocketMQ 在消息发送时自动生成的，通常是由 RocketMQ 的 Broker 系统生成的一个唯一标识符，用来标识每条消息。
         // 消息Keys是由应用程序在发送消息时手动设置的，可以是具有业务意义的唯一标识符。例如，在电商系统中，订单ID可以作为消息的Keys。
-        SendResult sendResult;
-        try {
-            sendResult = rocketMQTemplate.syncSendDeliverTimeMills(couponTemplateDelayCloseTopic, message, deliverTimeStamp);
-            log.info("[生产者] 优惠券模板延时关闭 - 发送结果：{}，消息ID：{}，消息Keys：{}", sendResult.getSendStatus(), sendResult.getMsgId(), messageKeys);
-        } catch (Exception ex) {
-            log.error("[生产者] 优惠券模板延时关闭 - 消息发送失败，消息体：{}", couponTemplateDO.getId(), ex);
-        }
+        // 发送延时消息事件，优惠券活动到期修改优惠券模板状态
+        CouponTemplateDelayEvent templateDelayEvent = CouponTemplateDelayEvent.builder()
+                .shopNumber(UserContext.getShopNumber())
+                .couponTemplateId(couponTemplateDO.getId())
+                .delayTime(couponTemplateDO.getValidEndTime().getTime())
+                .build();
+        couponTemplateDelayExecuteStatusProducer.sendMessage(templateDelayEvent);
+
 
     }
 

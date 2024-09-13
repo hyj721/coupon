@@ -12,6 +12,8 @@ import com.uestc.onecoupon.merchant.admin.dao.entity.CouponTaskDO;
 import com.uestc.onecoupon.merchant.admin.dao.mapper.CouponTaskMapper;
 import com.uestc.onecoupon.merchant.admin.dto.req.CouponTaskCreateReqDTO;
 import com.uestc.onecoupon.merchant.admin.dto.resp.CouponTemplateQueryRespDTO;
+import com.uestc.onecoupon.merchant.admin.mq.event.CouponTaskExecuteEvent;
+import com.uestc.onecoupon.merchant.admin.mq.producer.CouponTaskActualExecuteProducer;
 import com.uestc.onecoupon.merchant.admin.service.ICouponTaskService;
 import com.uestc.onecoupon.merchant.admin.service.ICouponTemplateService;
 import com.uestc.onecoupon.merchant.admin.service.handler.excel.RowCountListener;
@@ -37,6 +39,9 @@ public class CouponTaskServiceImpl implements ICouponTaskService {
     private final CouponTaskMapper couponTaskMapper;
 
     private final RedissonClient redissonClient;
+
+    private final CouponTaskActualExecuteProducer couponTaskActualExecuteProducer;
+
 
     private final ExecutorService executorService = new ThreadPoolExecutor(
             Runtime.getRuntime().availableProcessors(),
@@ -86,6 +91,15 @@ public class CouponTaskServiceImpl implements ICouponTaskService {
         RDelayedQueue<Object> delayedQueue = redissonClient.getDelayedQueue(blockingDeque);
         // 这里延迟时间设置 20 秒，原因是我们笃定上面线程池 20 秒之内就能结束任务
         delayedQueue.offer(delayJsonObject, 20, TimeUnit.SECONDS);
+
+        // 如果是立即发送任务，直接调用消息队列进行发送流程
+        if (Objects.equals(requestParam.getSendType(), CouponTaskSendTypeEnum.IMMEDIATE.getType())) {
+            // 执行优惠券推送业务，正式向用户发放优惠券
+            CouponTaskExecuteEvent couponTaskExecuteEvent = CouponTaskExecuteEvent.builder()
+                    .couponTaskId(couponTaskDO.getId())
+                    .build();
+            couponTaskActualExecuteProducer.sendMessage(couponTaskExecuteEvent);
+        }
 
     }
 
