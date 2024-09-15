@@ -27,6 +27,7 @@ import com.uestc.onecoupon.merchant.admin.service.basics.chain.MerchantAdminChai
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.common.message.MessageConst;
+import org.redisson.api.RBloomFilter;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -45,14 +46,12 @@ import static com.uestc.onecoupon.merchant.admin.common.enums.ChainBizMarkEnum.M
 public class CouponTemplateServiceImpl implements ICouponTemplateService {
 
     private final CouponTemplateMapper couponTemplateMapper;
-
     private final MerchantAdminChainContext merchantAdminChainContext;
-
     private final StringRedisTemplate stringRedisTemplate;
-
     private final ConfigurableEnvironment configurableEnvironment;
-
     private final CouponTemplateDelayExecuteStatusProducer couponTemplateDelayExecuteStatusProducer;
+    private final RBloomFilter<String> couponTemplateQueryBloomFilter;
+
 
 
 
@@ -148,6 +147,8 @@ public class CouponTemplateServiceImpl implements ICouponTemplateService {
                 .delayTime(couponTemplateDO.getValidEndTime().getTime())
                 .build();
         couponTemplateDelayExecuteStatusProducer.sendMessage(templateDelayEvent);
+        couponTemplateQueryBloomFilter.add(String.valueOf(couponTemplateDO.getId()));
+
 
 
     }
