@@ -1,4 +1,4 @@
-package com.uestc.coupon.engine;
+package com.uestc.onecoupon.engine;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
